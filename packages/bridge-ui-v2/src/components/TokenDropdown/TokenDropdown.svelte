@@ -10,7 +10,7 @@
   import { closeOnEscapeOrOutsideClick } from '$libs/customActions';
   import { tokenService } from '$libs/storage/services';
   import { ETHToken, type Token } from '$libs/token';
-  import { getCrossChainAddress } from '$libs/token/getCrossChainAddress';
+  import { getCrossChainInfo } from '$libs/token/getCrossChainInfo';
   import { uid } from '$libs/util/uid';
   import { account } from '$stores/account';
   import { network } from '$stores/network';
@@ -71,23 +71,22 @@
         return;
       }
 
-      let bridgedAddress = null;
-
       try {
-        bridgedAddress = await getCrossChainAddress({
+        const crossChainInfo = await getCrossChainInfo({
           token,
           srcChainId: srcChain.id,
           destChainId: destChain.id,
         });
+        if (!crossChainInfo) throw new Error('cross chain info not found');
+        const { address: bridgedAddress, chainId: bridgedChainId } = crossChainInfo;
+        // only update the token if we actually have a new bridged address
+        if (bridgedAddress && bridgedAddress !== token.addresses[destChain.id]) {
+          token.addresses[bridgedChainId] = bridgedAddress as Address;
+
+          tokenService.updateToken(token, $account?.address as Address);
+        }
       } catch (error) {
         console.error(error);
-      }
-
-      // only update the token if we actually have a new bridged address
-      if (bridgedAddress && bridgedAddress !== token.addresses[destChain.id]) {
-        token.addresses[destChain.id] = bridgedAddress as Address;
-
-        tokenService.updateToken(token, $account?.address as Address);
       }
     }
     value = token;

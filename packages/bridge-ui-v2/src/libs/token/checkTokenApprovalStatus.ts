@@ -17,8 +17,10 @@ import { getContractAddressByType } from '$libs/bridge/getContractAddressByType'
 import { getConnectedWallet } from '$libs/util/getConnectedWallet';
 import { getLogger } from '$libs/util/logger';
 import { account, network } from '$stores';
+import { getCanonicalStatus } from '$stores/canonical';
 
 import { checkOwnershipOfNFT } from './checkOwnership';
+import { getCanonicalInfoForToken } from './getCanonicalInfoForToken';
 import { type NFT, type Token, TokenType } from './types';
 
 const log = getLogger('util:token:checkTokenApprovalStatus');
@@ -44,6 +46,25 @@ export const checkTokenApprovalStatus = async (token: Maybe<Token | NFT>): Promi
   const ownerAddress = get(account)?.address;
   const tokenAddress = get(selectedToken)?.addresses[currentChainId];
   log('selectedToken', get(selectedToken));
+
+  if (!tokenAddress) return;
+  if (getCanonicalStatus(tokenAddress)) {
+    allApproved.set(true);
+    insufficientAllowance.set(false);
+    log('token is bridged, no need for approvals');
+    return;
+  } else {
+    const canonicalInfo = await getCanonicalInfoForToken({
+      token,
+      srcChainId: currentChainId,
+      destChainId: destinationChainId,
+    });
+    if (canonicalInfo && canonicalInfo.address !== tokenAddress) {
+      // we have a bridged token, we do not need approvals
+      log('token is bridged, no need for approvals');
+      return;
+    }
+  }
 
   if (!ownerAddress || !tokenAddress) {
     log('no ownerAddress or tokenAddress', ownerAddress, tokenAddress);

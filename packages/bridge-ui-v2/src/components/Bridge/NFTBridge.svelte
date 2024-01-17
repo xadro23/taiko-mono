@@ -20,7 +20,8 @@
   import ConfirmationStep from './NFTBridgeSteps/ConfirmationStep.svelte';
   import Import from './NFTBridgeSteps/ImportStep/Import.svelte';
   import RecipientStep from './NFTBridgeSteps/RecipientStep.svelte';
-  import ReviewStep from './NFTBridgeSteps/ReviewStep.svelte';
+  // import ReviewStep from './NFTBridgeSteps/ReviewStep.svelte';
+  import Review from './NFTBridgeSteps/ReviewStep/Review.svelte';
   import StepNavigation from './NFTBridgeSteps/StepNavigation/StepNavigation.svelte';
   import type { ProcessingFee } from './ProcessingFee';
   import {
@@ -120,7 +121,7 @@
 
   let nftStepTitle: string;
   let nftStepDescription: string;
-  let nextStepButtonText: string;
+  // let nextStepButtonText: string;
 
   let addressInputComponent: AddressInput;
   let nftIdInputComponent: IdInput;
@@ -129,16 +130,16 @@
 
   let canProceed: boolean = false;
 
-  const getStepText = () => {
-    if (activeStep === NFTSteps.REVIEW) {
-      return $t('common.confirm');
-    }
-    if (activeStep === NFTSteps.CONFIRM) {
-      return $t('common.ok');
-    } else {
-      return $t('common.continue');
-    }
-  };
+  // const getStepText = () => {
+  //   if (activeStep === NFTSteps.REVIEW) {
+  //     return $t('common.confirm');
+  //   }
+  //   if (activeStep === NFTSteps.CONFIRM) {
+  //     return $t('common.ok');
+  //   } else {
+  //     return $t('common.continue');
+  //   }
+  // };
 
   // const prefetchImage = async () => {
   //   const srcChainId = $network?.id;
@@ -201,7 +202,7 @@
       nftStepTitle = $t(`bridge.title.nft.${stepKey}`);
       nftStepDescription = $t(`bridge.description.nft.${stepKey}`);
     }
-    nextStepButtonText = getStepText();
+    // nextStepButtonText = getStepText();
   }
 
   onDestroy(() => {
@@ -211,7 +212,6 @@
   $: activeStep === NFTSteps.IMPORT && resetForm();
 </script>
 
-{nextStepButtonText}
 <div class=" gap-0 w-full md:w-[524px]">
   <Stepper {activeStep}>
     <Step stepIndex={NFTSteps.IMPORT} currentStepIndex={activeStep} isActive={activeStep === NFTSteps.IMPORT}
@@ -237,7 +237,8 @@
           bind:validating={validatingImport} /> -->
         <!-- REVIEW STEP -->
       {:else if activeStep === NFTSteps.REVIEW}
-        <ReviewStep on:editTransactionDetails={handleTransactionDetailsClick} bind:hasEnoughEth />
+        <!-- <ReviewStep on:editTransactionDetails={handleTransactionDetailsClick} bind:hasEnoughEth /> -->
+        <Review on:editTransactionDetails={handleTransactionDetailsClick} bind:hasEnoughEth />
         <!-- RECIPIENT STEP -->
       {:else if activeStep === NFTSteps.RECIPIENT}
         <RecipientStep bind:this={recipientStepComponent} bind:hasEnoughEth />
