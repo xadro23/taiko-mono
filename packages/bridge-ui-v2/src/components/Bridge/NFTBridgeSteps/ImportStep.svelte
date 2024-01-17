@@ -49,7 +49,7 @@
 
   export const prefetchImage = () => noop();
 
-  let enteredIds: string = '';
+  let enteredIds: number[] = [];
   let scanning: boolean;
 
   let addressInputComponent: AddressInput;
@@ -71,7 +71,7 @@
 
   const reset = () => {
     nftView = NFTView.LIST;
-    enteredIds = '';
+    enteredIds = [];
     isOwnerOfAllToken = false;
     detectedTokenType = null;
   };
@@ -162,8 +162,10 @@
         isOwnerOfAllToken = ownershipResults.every((value) => value.isOwner === true);
 
         if (!isOwnerOfAllToken) {
+          idInputState = IDInputState.INVALID;
           throw new Error('Not owner of all tokens');
         }
+        idInputState = IDInputState.VALID;
 
         const token = await getTokenWithInfoFromAddress({
           contractAddress: contractAddress as Address,
@@ -183,9 +185,7 @@
         $selectedNFTs = [token as NFT];
         idInputState = IDInputState.VALID;
 
-        $tokenBalance = token.balance;
-
-        await prefetchImage();
+        $tokenBalance = token.type !== TokenType.ERC721 ? token.balance : null;
       } else {
         idInputState = IDInputState.INVALID;
       }
@@ -194,11 +194,11 @@
       detectedTokenType = null;
       idInputState = IDInputState.INVALID;
     } finally {
-      validating = false;
       if (idInputState !== IDInputState.VALID) {
         idInputState = IDInputState.DEFAULT;
       }
     }
+    validating = false;
   };
 
   onMount(() => {
@@ -208,43 +208,45 @@
   // Handles the next step button status
   $: {
     const hasSelectedNFTs = $selectedNFTs !== null && $selectedNFTs !== undefined && $selectedNFTs.length > 0;
-    if (!hasSelectedNFTs) canProceed = false;
+    if (!hasSelectedNFTs) {
+      canProceed = false;
+    } else {
+      const isValidManualERC721 =
+        detectedTokenType === TokenType.ERC721 &&
+        addressInputState === AddressInputState.VALID &&
+        idInputState === IDInputState.VALID &&
+        isOwnerOfAllToken;
 
-    const isValidManualERC721 =
-      detectedTokenType === TokenType.ERC721 &&
-      addressInputState === AddressInputState.VALID &&
-      idInputState === IDInputState.VALID &&
-      isOwnerOfAllToken;
+      const isValidManualERC1155 =
+        detectedTokenType === TokenType.ERC1155 &&
+        addressInputState === AddressInputState.VALID &&
+        idInputState === IDInputState.VALID &&
+        $enteredAmount > BigInt(0) &&
+        typeof $tokenBalance === 'bigint' &&
+        $enteredAmount <= $tokenBalance &&
+        isOwnerOfAllToken;
 
-    const isValidManualERC1155 =
-      detectedTokenType === TokenType.ERC1155 &&
-      addressInputState === AddressInputState.VALID &&
-      idInputState === IDInputState.VALID &&
-      $enteredAmount > BigInt(0) &&
-      typeof $tokenBalance === 'bigint' &&
-      $enteredAmount <= $tokenBalance &&
-      isOwnerOfAllToken;
+      const isManualImportValid = importMethod === ImportMethod.MANUAL && (isValidManualERC721 || isValidManualERC1155);
 
-    const isManualImportValid = importMethod === ImportMethod.MANUAL && (isValidManualERC721 || isValidManualERC1155);
+      const isValidScanERC1155 =
+        hasSelectedNFTs &&
+        $selectedNFTs![0].type === TokenType.ERC1155 &&
+        $enteredAmount > BigInt(0) &&
+        typeof $tokenBalance === 'bigint' &&
+        $enteredAmount <= $tokenBalance &&
+        !$insufficientBalance;
 
-    const isValidScanERC1155 =
-      hasSelectedNFTs &&
-      $selectedNFTs![0].type === TokenType.ERC1155 &&
-      $enteredAmount > BigInt(0) &&
-      typeof $tokenBalance === 'bigint' &&
-      $enteredAmount <= $tokenBalance &&
-      !$insufficientBalance;
+      const isValidScanERC721 = hasSelectedNFTs && $selectedNFTs![0].type === TokenType.ERC721;
 
-    const isValidScanERC721 = hasSelectedNFTs && $selectedNFTs![0].type === TokenType.ERC721;
+      const isScanImportValid =
+        importMethod === ImportMethod.SCAN &&
+        hasSelectedNFTs &&
+        $destinationChain !== undefined && // Assuming undefined is invalid
+        scanned &&
+        (isValidScanERC1155 || isValidScanERC721);
 
-    const isScanImportValid =
-      importMethod === ImportMethod.SCAN &&
-      hasSelectedNFTs &&
-      $destinationChain !== undefined && // Assuming undefined is invalid
-      scanned &&
-      (isValidScanERC1155 || isValidScanERC721);
-
-    canProceed = isManualImportValid || isScanImportValid;
+      canProceed = isManualImportValid || isScanImportValid;
+    }
   }
 
   $: canImport = $account?.isConnected && $network?.id && $destinationChain && !scanning;
