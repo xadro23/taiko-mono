@@ -5,7 +5,7 @@ import type { Address } from 'viem';
 import { destNetwork } from '$components/Bridge/state';
 import { getLogger } from '$libs/util/logger';
 import { resolveIPFSUri } from '$libs/util/resolveIPFSUri';
-import { getCanonicalTokenInfo } from '$stores/canonical';
+import { getCanonicalTokenInfoStore } from '$stores/canonical';
 import { metadataCache } from '$stores/metadata';
 import { network } from '$stores/network';
 
@@ -71,9 +71,9 @@ const crossChainFetchNFTMetadata = async (token: NFT): Promise<NFTMetadata | nul
     let canonicalAddress: Address;
     let canonicalChainID: number;
 
-    if (getCanonicalTokenInfo(tokenAddress) && getCanonicalTokenInfo(tokenAddress).isCanonical) {
+    if (getCanonicalTokenInfoStore(tokenAddress) && getCanonicalTokenInfoStore(tokenAddress).isCanonical) {
       canonicalAddress = tokenAddress;
-      canonicalChainID = getCanonicalTokenInfo(tokenAddress).chainId;
+      canonicalChainID = getCanonicalTokenInfoStore(tokenAddress).chainId;
     } else {
       const canonicalInfo = await getCanonicalInfoForToken({ token, srcChainId, destChainId });
       if (!canonicalInfo) throw new Error('No cross chain info found');

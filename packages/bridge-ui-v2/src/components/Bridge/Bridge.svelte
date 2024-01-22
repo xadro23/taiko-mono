@@ -24,8 +24,8 @@
   import { BridgePausedError } from '$libs/error';
   import { bridgeTxService } from '$libs/storage';
   import { ETHToken, tokens, TokenType } from '$libs/token';
-  import { checkTokenApprovalStatus } from '$libs/token/checkTokenApprovalStatus';
   import { getCrossChainInfoForToken } from '$libs/token/getCrossChainInfoForToken';
+  import { getTokenApprovalStatus } from '$libs/token/getTokenApprovalStatus';
   import { refreshUserBalance } from '$libs/util/balance';
   import { isBridgePaused } from '$libs/util/checkForPausedContracts';
   import { getConnectedWallet } from '$libs/util/getConnectedWallet';
@@ -41,6 +41,7 @@
   import {
     activeBridge,
     allApproved,
+    approving,
     bridgeService,
     destNetwork as destinationChain,
     enteredAmount,
@@ -140,7 +141,7 @@
 
         await pendingTransactions.add(txHash, $network.id);
 
-        await checkTokenApprovalStatus($selectedToken);
+        await getTokenApprovalStatus($selectedToken);
 
         await pendingTransactions.add(txHash, $network.id);
 
@@ -156,6 +157,7 @@
     } catch (err) {
       console.error(err);
       handleBridgeError(err as Error);
+      $approving = false;
     }
   }
 
@@ -235,6 +237,7 @@
     } catch (err) {
       console.error(err);
       handleBridgeError(err as Error);
+      bridging = false;
     }
   }
 

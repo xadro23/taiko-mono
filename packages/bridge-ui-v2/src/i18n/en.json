@@ -43,7 +43,8 @@
       "bridge": "Bridge",
       "bridging": "Bridging",
       "fetch": "Fetch NFT data",
-      "import": "Import"
+      "import": "Import",
+      "validating": "Validating..."
     },
     "description": {
       "default": "Send your assets across chains.",
@@ -268,7 +269,7 @@
         "invalid": "Not a valid numeric value"
       },
       "label": "Token ID",
-      "placeholder": "1 or 5,14,733"
+      "placeholder": "e.g. 1 (only numbers)"
     }
   },
   "messages": {
