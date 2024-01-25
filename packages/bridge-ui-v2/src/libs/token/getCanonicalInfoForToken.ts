@@ -1,12 +1,14 @@
 import { getContract } from '@wagmi/core';
+import { get } from 'svelte/store';
 import { type Abi, type Address, zeroAddress } from 'viem';
 
 import { erc20VaultABI, erc721VaultABI, erc1155VaultABI } from '$abi';
 import { routingContractsMap } from '$bridgeConfig';
 import { NoCanonicalInfoFoundError } from '$libs/error';
 import { getLogger } from '$libs/util/logger';
-import { getCanonicalStatusFromStore, setCanonicalTokenInfoStore } from '$stores/canonical';
+import { isCanonicalAddress, tokenInfoStore } from '$stores/tokenInfo';
 
+import { detectContractType } from './detectContractType';
 import { type GetTokenInfo, TokenType } from './types';
 
 const log = getLogger('token:getCanonicalInfoForToken');
@@ -21,6 +23,114 @@ type CheckCanonicalStatusArgs = {
 type CanonicalInfo = {
   chainId: number;
   address: Address;
+};
+
+export async function getCanonicalInfoForToken({
+  token,
+  srcChainId,
+  destChainId,
+}: GetTokenInfo): Promise<CanonicalInfo | null> {
+  if (token.type === TokenType.ETH) return null; // ETH doesn't have an address
+  log(
+    `Find canonicalInfo for ${token.type} token ${token.symbol} (${token.name}) from chain ${srcChainId} to chain ${destChainId}`,
+    token,
+  );
+
+  if (token.addresses[srcChainId] && token.addresses[destChainId]) {
+    // we already have addresses for both, lets find the canonical one
+    log('addresses for both, fetching canonical one');
+    for (const [currentSrcChainId, address] of Object.entries(token.addresses)) {
+      if (parseInt(currentSrcChainId) === destChainId) continue;
+
+      // check store first to save some time
+      if (isCanonicalAddress(address)) {
+        log('found canonical info in store');
+
+        const tokenInfo = get(tokenInfoStore)[address];
+        const canonicalChain = tokenInfo.canonical?.chainId;
+        const canonicalAddress = tokenInfo.canonical?.address;
+
+        log('canonical info', canonicalChain, canonicalAddress);
+        if (canonicalChain && canonicalAddress) {
+          return { chainId: canonicalChain, address: canonicalAddress };
+        }
+      }
+
+      log('fetching new canonical info');
+
+      const { canonicalTokenAddress, canonicalChain } = await _getStatus({
+        address,
+        srcChainId: parseInt(currentSrcChainId),
+        destChainId,
+        type: token.type,
+      });
+      if (canonicalTokenAddress && canonicalChain) {
+        log(`Found canonical address ${canonicalTokenAddress} on chain ${canonicalChain}`);
+        return { chainId: canonicalChain, address: canonicalTokenAddress };
+      }
+    }
+  } else {
+    const srcChainTokenAddress = Object.values(token.addresses)[0];
+    const srcChainTokenChainId = parseInt(Object.keys(token.addresses)[0]);
+
+    const destinationId = srcChainTokenChainId === srcChainId ? destChainId : srcChainTokenChainId;
+
+    // check store first to save some time
+    if (isCanonicalAddress(srcChainTokenAddress)) {
+      log('found canonical info in store');
+
+      const tokenInfo = get(tokenInfoStore)[srcChainTokenAddress];
+      const canonicalChain = tokenInfo.canonical?.chainId;
+      const canonicalAddress = tokenInfo.canonical?.address;
+
+      log('canonical info', canonicalChain, canonicalAddress);
+      if (canonicalChain && canonicalAddress) {
+        return { chainId: canonicalChain, address: canonicalAddress };
+      }
+    }
+    log('fetching new canonical info');
+
+    return await getCanonicalInfoForAddress({
+      address: srcChainTokenAddress,
+      srcChainId,
+      destChainId: destinationId,
+    });
+  }
+  log('No canonical info found for token', token, srcChainId, destChainId);
+  throw new NoCanonicalInfoFoundError('No canonical info found for token');
+}
+
+export const getCanonicalInfoForAddress = async ({
+  address,
+  srcChainId,
+  destChainId,
+  type,
+}: {
+  address: Address;
+  srcChainId: number;
+  destChainId: number;
+  type?: TokenType;
+}) => {
+  try {
+    if (!type) type = await detectContractType(address, srcChainId);
+  } catch {
+    type = await detectContractType(address, destChainId);
+  }
+
+  const { canonicalTokenAddress, canonicalChain } = await _getStatus({
+    address,
+    srcChainId,
+    destChainId,
+    type: type,
+  });
+
+  if (canonicalTokenAddress && canonicalChain) {
+    log(`Found canonical address ${canonicalTokenAddress} on chain ${canonicalChain}`);
+    return { chainId: canonicalChain, address: canonicalTokenAddress };
+  } else {
+    log('No canonical info found for address', address, srcChainId, destChainId);
+    throw new NoCanonicalInfoFoundError('No canonical info found for address');
+  }
 };
 
 const _getStatus = async ({ address, srcChainId, destChainId, type }: CheckCanonicalStatusArgs) => {
@@ -79,72 +189,3 @@ const _getStatus = async ({ address, srcChainId, destChainId, type }: CheckCanon
   }
   return { canonicalTokenAddress, canonicalChain };
 };
-
-export async function getCanonicalInfoForToken({
-  token,
-  srcChainId,
-  destChainId,
-}: GetTokenInfo): Promise<CanonicalInfo | null> {
-  if (token.type === TokenType.ETH) return null; // ETH doesn't have an address
-  log(
-    `Find canonicalInfo for ${token.type} token ${token.symbol} (${token.name}) from chain ${srcChainId} to chain ${destChainId}`,
-    token,
-  );
-
-  if (token.addresses[srcChainId] && token.addresses[destChainId]) {
-    // we already have addresses for both, lets find the canonical one
-    log('addresses for both, fetching canonical one');
-    for (const [currentSrcChainId, address] of Object.entries(token.addresses)) {
-      if (parseInt(currentSrcChainId) === destChainId) continue;
-
-      // check store first
-      if (getCanonicalStatusFromStore(address)) {
-        log('found canonical address in store', address);
-        return { chainId: srcChainId, address };
-      }
-      log('fetching new canonical info');
-
-      const { canonicalTokenAddress, canonicalChain } = await _getStatus({
-        address,
-        srcChainId: parseInt(currentSrcChainId),
-        destChainId,
-        type: token.type,
-      });
-      if (canonicalTokenAddress && canonicalChain) {
-        log(`Found canonical address ${canonicalTokenAddress} on chain ${canonicalChain}`);
-        setCanonicalTokenInfoStore(canonicalTokenAddress, true, canonicalChain);
-        return { chainId: canonicalChain, address: canonicalTokenAddress };
-      }
-    }
-  } else {
-    // we take the first address we have and find the canonical one
-    log('fetching canonical address for first address we have');
-    const srcChainTokenAddress = Object.values(token.addresses)[0];
-    const srcChainTokenChainId = Object.keys(token.addresses)[0];
-
-    if (!srcChainTokenAddress || !srcChainTokenChainId)
-      throw new NoCanonicalInfoFoundError('No canonical info found for token');
-
-    // check store first
-    if (getCanonicalStatusFromStore(srcChainTokenAddress)) {
-      log('found canonical address in store', srcChainTokenAddress);
-      return { chainId: parseInt(srcChainTokenChainId), address: srcChainTokenAddress };
-    }
-    log('fetching new canonical info');
-
-    const { canonicalTokenAddress, canonicalChain } = await _getStatus({
-      address: srcChainTokenAddress,
-      srcChainId: parseInt(srcChainTokenChainId),
-      destChainId,
-      type: token.type,
-    });
-
-    if (canonicalTokenAddress && canonicalChain) {
-      log(`Found canonical address ${canonicalTokenAddress} on chain ${canonicalChain}`);
-      setCanonicalTokenInfoStore(canonicalTokenAddress, true, canonicalChain);
-      return { chainId: canonicalChain, address: canonicalTokenAddress };
-    }
-  }
-  log('No canonical info found for token', token, srcChainId, destChainId);
-  throw new NoCanonicalInfoFoundError('No canonical info found for token');
-}
