@@ -14,7 +14,6 @@
   import { type Account, account } from '$stores/account';
   import type { Network } from '$stores/network';
 
-  import type Amount from './Amount.svelte';
   import { ImportStep, ReviewStep, StepNavigation } from './NFTBridgeComponents';
   import type IdInput from './NFTBridgeComponents/IDInput/IDInput.svelte';
   import { ConfirmationStep, RecipientStep } from './SharedBridgeComponents';
@@ -30,7 +29,6 @@
   } from './state';
   import { BridgeSteps } from './types';
 
-  let amountComponent: Amount;
   let recipientStepComponent: RecipientStep;
   let processingFeeComponent: ProcessingFee;
   let importMethod: ImportMethod;
@@ -67,7 +65,6 @@
   }
 
   const runValidations = () => {
-    if (amountComponent) amountComponent.validateAmount();
     if (addressInputComponent) addressInputComponent.validateAddress();
     isBridgePaused().then((paused) => {
       if (paused) {
@@ -97,12 +94,10 @@
 
   const resetForm = () => {
     //we check if these are still mounted, as the user might have left the page
-    if (amountComponent) amountComponent.clearAmount();
     if (processingFeeComponent) processingFeeComponent.resetProcessingFee();
     if (addressInputComponent) addressInputComponent.clearAddress();
 
     // Update balance after bridging
-    if (amountComponent) amountComponent.updateBalance();
     if (nftIdInputComponent) nftIdInputComponent.clearIds();
 
     $recipientAddress = $account?.address || null;
@@ -132,9 +127,6 @@
   }
 
   $: validatingImport = false;
-  $: if ($selectedToken && amountComponent) {
-    amountComponent.validateAmount();
-  }
 
   $: activeStep === BridgeSteps.IMPORT && resetForm();
 
