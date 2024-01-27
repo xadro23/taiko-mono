@@ -31,6 +31,7 @@
   import { bridgeTxService } from '$libs/storage';
   import { TokenType } from '$libs/token';
   import { getTokenApprovalStatus } from '$libs/token/getTokenApprovalStatus';
+  import { refreshUserBalance } from '$libs/util/balance';
   import { isBridgePaused } from '$libs/util/checkForPausedContracts';
   import { getConnectedWallet } from '$libs/util/getConnectedWallet';
   import { account } from '$stores/account';
@@ -101,6 +102,7 @@
       }),
     });
 
+    refreshUserBalance();
     await pendingTransactions.add(approveTxHash, currentChain);
     statusTitle = $t('bridge.actions.approve.success.title');
     statusDescription = $t('bridge.nft.step.confirm.approve.success.message', {
