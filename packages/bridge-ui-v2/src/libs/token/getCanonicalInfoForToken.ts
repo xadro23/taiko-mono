@@ -94,6 +94,7 @@ export async function getCanonicalInfoForToken({
       address: srcChainTokenAddress,
       srcChainId,
       destChainId: destinationId,
+      type: token.type,
     });
   }
   log('No canonical info found for token', token, srcChainId, destChainId);
