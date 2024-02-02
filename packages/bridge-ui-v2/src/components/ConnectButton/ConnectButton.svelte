@@ -11,7 +11,7 @@
   import { shortenAddress } from '$libs/util/shortenAddress';
   import { account } from '$stores/account';
   import { ethBalance } from '$stores/balance';
-  import { network } from '$stores/network';
+  import { connectedSourceChain } from '$stores/network';
 
   export let connected = false;
 
@@ -27,7 +27,7 @@
     web3modalOpen = state.open;
   }
 
-  $: currentChainId = $network?.id;
+  $: currentChainId = $connectedSourceChain?.id;
   $: accountAddress = $account?.address || '';
 
   $: balance = $ethBalance || 0n;

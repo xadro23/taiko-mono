@@ -8,7 +8,7 @@ import type { Address } from 'viem';
 import type { TokenType } from '$libs/token';
 // import { getConnectedWallet } from "$libs/util/getConnectedWallet";
 // import { account } from '$stores/account';
-// import { network } from '$stores/network';
+// import { connectedSourceChain } from '$stores/network';
 
 // import type { NFTBridgeTransferOp } from ".";
 

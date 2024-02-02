@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { Chain, GetNetworkResult } from '@wagmi/core';
   import { t } from 'svelte-i18n';
+  import type { Chain } from 'viem';
 
   import { chainConfig } from '$chainConfig';
   import ChainsDialog from '$components/ChainSelectors/SelectorDialogs/ChainsDialog.svelte';
@@ -10,7 +10,7 @@
   import { truncateString } from '$libs/util/truncateString';
   import { uid } from '$libs/util/uid';
 
-  export let value: Maybe<GetNetworkResult['chain']> = null;
+  export let value: Maybe<Chain> | null = null;
   export let label = '';
   export let readOnly = false;
   export let selectChain: (event: CustomEvent<{ chain: Chain; switchWallet: boolean }>) => Promise<void>;

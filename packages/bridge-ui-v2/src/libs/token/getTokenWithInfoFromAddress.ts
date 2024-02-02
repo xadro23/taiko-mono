@@ -1,10 +1,11 @@
-import { erc721ABI, fetchToken, readContract } from '@wagmi/core';
+import { getToken, readContract } from '@wagmi/core';
 import type { Address } from 'viem';
 
-import { erc1155ABI } from '$abi';
+import { erc721ABI, erc1155ABI } from '$abi';
 import { fetchNFTMetadata } from '$libs/token/fetchNFTMetadata';
 import { getLogger } from '$libs/util/logger';
 import { safeReadContract } from '$libs/util/safeReadContract';
+import { config } from '$libs/wagmi';
 
 import { detectContractType } from './detectContractType';
 import { type NFT, type NFTMetadata, type Token, TokenType } from './types';
@@ -46,7 +47,9 @@ export const getTokenWithInfoFromAddress = async ({
 
 const getERC20Info = async (contractAddress: Address, srcChainId: number, type: TokenType) => {
   log(`getting token info for ERC20`);
-  const fetchResult = await fetchToken({
+
+  // TODO: check deprecation
+  const fetchResult = await getToken(config, {
     address: contractAddress,
     chainId: srcChainId,
   });
@@ -97,7 +100,7 @@ const getERC1155Info = async (
 
   let balance;
   if (tokenId !== null && tokenId !== undefined && owner) {
-    balance = await readContract({
+    balance = await readContract(config, {
       address: contractAddress,
       abi: erc1155ABI,
       functionName: 'balanceOf',
