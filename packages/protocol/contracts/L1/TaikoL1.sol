@@ -229,7 +229,7 @@ contract TaikoL1 is
             // and right now txList is still saved in calldata, so we set it
             // to 120KB.
             blockMaxTxListBytes: 120_000,
-            blobExpiry: 24 hours,
+            blobExpiry: 3 seconds,
             blobAllowedForDA: true,
             livenessBond: 250e18, // 250 Taiko token
             // ETH deposit related.
