@@ -359,8 +359,8 @@ importers:
         specifier: 0.6.0-beta.36
         version: 0.6.0-beta.36(hardhat@2.19.2)
       ts-node:
-        specifier: ^10.9.1
-        version: 10.9.1(@types/node@20.10.4)(typescript@5.3.3)
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@20.10.4)(typescript@5.3.3)
       typechain:
         specifier: ^8.3.2
         version: 8.3.2(typescript@5.3.3)
@@ -7297,13 +7297,6 @@ packages:
   /@web3modal/siwe@4.0.5(typescript@5.3.3):
     resolution: {integrity: sha512-JxYoM0rvgekpvd2Wyw1mtq7mbv8JBsbP22K5Evf4ZUupVAgoeNHDGCBKK8nKwdwMuc2AfsAcdNqx+rwS6N9WLQ==}
     requiresBuild: true
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
-      vue:
-        optional: true
     dependencies:
       '@web3modal/core': 4.0.5(react@18.2.0)
       '@web3modal/scaffold-utils': 4.0.5(react@18.2.0)
@@ -7351,15 +7344,6 @@ packages:
       '@wagmi/connectors': '>=4.0.0'
       '@wagmi/core': '>=2.0.0'
       viem: '>=2.0.0'
-    peerDependenciesMeta:
-      '@web3modal/siwe':
-        optional: true
-      react:
-        optional: true
-      react-dom:
-        optional: true
-      vue:
-        optional: true
     dependencies:
       '@wagmi/connectors': 4.1.14(@wagmi/core@2.6.5)(react-dom@18.2.0)(react-native@0.73.4)(react@18.2.0)(typescript@5.3.3)(viem@2.7.9)
       '@wagmi/core': 2.6.5(react@18.2.0)(typescript@5.3.3)(viem@2.7.9)
@@ -12098,7 +12082,7 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /hardhat@2.19.2(ts-node@10.9.1)(typescript@5.3.3):
+  /hardhat@2.19.2(ts-node@10.9.2)(typescript@5.3.3):
     resolution: {integrity: sha512-CRU3+0Cc8Qh9UpxKd8cLADDPes7ZDtKj4dTK+ERtLBomEzhRPLWklJn4VKOwjre9/k8GNd/e9DYxpfuzcxbXPQ==}
     hasBin: true
     peerDependencies:
@@ -12154,7 +12138,7 @@ packages:
       solc: 0.7.3(debug@4.3.4)
       source-map-support: 0.5.21
       stacktrace-parser: 0.1.10
-      ts-node: 10.9.1(@types/node@20.10.4)(typescript@5.3.3)
+      ts-node: 10.9.2(@types/node@20.10.4)(typescript@5.3.3)
       tsort: 0.0.1
       typescript: 5.3.3
       undici: 5.28.2
@@ -17678,7 +17662,7 @@ packages:
       hardhat: ^2.8.0
     dependencies:
       handlebars: 4.7.8
-      hardhat: 2.19.2(ts-node@10.9.1)(typescript@5.3.3)
+      hardhat: 2.19.2(ts-node@10.9.2)(typescript@5.3.3)
       solidity-ast: 0.4.55
     dev: true
 
@@ -18895,8 +18879,8 @@ packages:
       code-block-writer: 12.0.0
     dev: true
 
-  /ts-node@10.9.1(@types/node@20.10.4)(typescript@5.3.3):
-    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+  /ts-node@10.9.2(@types/node@20.10.4)(typescript@5.3.3):
+    resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
     hasBin: true
     peerDependencies:
       '@swc/core': '>=1.2.50'
@@ -20508,7 +20492,7 @@ packages:
       ghost-testrpc: 0.0.2
       global-modules: 2.0.0
       globby: 10.0.2
-      hardhat: 2.19.2(ts-node@10.9.1)(typescript@5.3.3)
+      hardhat: 2.19.2(ts-node@10.9.2)(typescript@5.3.3)
       jsonschema: 1.4.1
       lodash: 4.17.21
       mocha: 7.1.2
